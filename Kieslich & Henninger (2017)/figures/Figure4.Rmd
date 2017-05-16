@@ -1,0 +1,31 @@
+---
+title: ''
+output: 
+  pdf_document: 
+    highlight: pygments
+classoption: a5paper
+geometry: margin=4mm
+---
+
+
+
+```{r,eval=FALSE}
+library(readbulk)
+raw_data <- read_opensesame("raw_data", verbose = FALSE)
+raw_data <- subset(raw_data, Condition!="Example" & correct==1)
+
+library(mousetrap)
+mt_data <- mt_import_mousetrap(raw_data)
+mt_data <- mt_remap_symmetric(mt_data)
+mt_data <- mt_align_start(mt_data)
+mt_data <- mt_measures(mt_data)
+
+agg_measures <- mt_aggregate_per_subject(mt_data, subject_id = "subject_nr",
+  use_variables = "MAD", use2_variables = "Condition")
+t.test(MAD~Condition, data = agg_measures, paired = TRUE)
+
+mt_data <- mt_time_normalize(mt_data)
+mt_plot_aggregate(mt_data, use = "tn_trajectories", points = TRUE,
+  x = "xpos", y = "ypos", color = "Condition", subject_id = "subject_nr")
+```
+
