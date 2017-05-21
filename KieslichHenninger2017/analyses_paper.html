@@ -145,7 +145,10 @@ library(dplyr)</code></pre>
 <h1>Data preparation</h1>
 <div id="read-in-merged-raw-data" class="section level2">
 <h2>Read in merged raw data</h2>
-<pre class="r"><code>raw_data &lt;- read.csv(&quot;merged_data/raw_data.csv.gz&quot;,stringsAsFactor=FALSE)</code></pre>
+<pre class="r"><code># Read in raw data
+# (commtented out as the raw data are now included in the mousetrap R package)
+# raw_data &lt;- read.csv(&quot;merged_data/raw_data.csv.gz&quot;,stringsAsFactor=FALSE)
+raw_data &lt;- KH2017_raw</code></pre>
 </div>
 <div id="filter-trials" class="section level2">
 <h2>Filter trials</h2>
@@ -252,9 +255,9 @@ agg_mad %&gt;%
   group_by(Condition) %&gt;%
   select(MAD,Condition) %&gt;%
   summarize_all(.funs = c(&quot;mean&quot;,&quot;sd&quot;))</code></pre>
-<pre><code>## # A tibble: 2 × 3
+<pre><code>## # A tibble: 2 x 3
 ##   Condition     mean       sd
-##       &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+##      &lt;fctr&gt;    &lt;dbl&gt;    &lt;dbl&gt;
 ## 1  Atypical 343.7954 218.6368
 ## 2   Typical 172.2093 110.8397</code></pre>
 <pre class="r"><code>t.test(MAD~Condition, data=agg_mad, paired=TRUE)</code></pre>
@@ -316,9 +319,9 @@ agg_mad_sub %&gt;%
   group_by(Condition) %&gt;%
   select(MAD,Condition) %&gt;%
   summarize_all(.funs = c(&quot;mean&quot;,&quot;sd&quot;))</code></pre>
-<pre><code>## # A tibble: 2 × 3
+<pre><code>## # A tibble: 2 x 3
 ##   Condition     mean       sd
-##       &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+##      &lt;fctr&gt;    &lt;dbl&gt;    &lt;dbl&gt;
 ## 1  Atypical 200.7050 209.2332
 ## 2   Typical 121.7434 117.4904</code></pre>
 <pre class="r"><code>t.test(MAD~Condition, data=agg_mad_sub, paired=TRUE)</code></pre>
@@ -359,7 +362,7 @@ $(document).ready(function () {
   (function () {
     var script = document.createElement("script");
     script.type = "text/javascript";
-    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
     document.getElementsByTagName("head")[0].appendChild(script);
   })();
 </script>

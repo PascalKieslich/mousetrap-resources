@@ -31,7 +31,10 @@ theme_set(theme_classic()+
 
 ## Read in merged raw data
 ```{r}
-raw_data <- read.csv("merged_data/raw_data.csv.gz",stringsAsFactor=FALSE)
+# Read in raw data
+# (commtented out as the raw data are now included in the mousetrap R package)
+# raw_data <- read.csv("merged_data/raw_data.csv.gz",stringsAsFactor=FALSE)
+raw_data <- KH2017_raw
 ```
 
 ## Filter trials
