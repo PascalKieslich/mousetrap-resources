@@ -1,7 +1,10 @@
 ---
 title: "Paper analyses"
 author: "Pascal J. Kieslich & Felix Henninger"
-output: html_document
+output:
+  pdf_document: 
+    fig_height: 4
+    fig_width: 4
 ---
 
 
@@ -31,9 +34,11 @@ theme_set(theme_classic()+
 
 ## Read in merged raw data
 ```{r}
-# Read in raw data
-# (commtented out as the raw data are now included in the mousetrap R package)
+# Read in raw data from csv.gz file
+# (commented out as the raw data are now included in the mousetrap R package)
 # raw_data <- read.csv("merged_data/raw_data.csv.gz",stringsAsFactor=FALSE)
+
+# Instead, get raw data directly from data stored in mousetrap package
 raw_data <- KH2017_raw
 ```
 
@@ -72,25 +77,24 @@ mt_data <- mt_time_normalize(mt_data)
 mt_check_resolution(mt_data, desired = 10)
 ```
 
-## Comparison of measures based on time-normalized vs. raw trajectories
-```{r}
-mt_data <- mt_measures(mt_data,use="tn_trajectories",save_as="tn_measures")
-diag(cor(mt_data$measures[,-1],mt_data$tn_measures[,-1]))
-```
-
 ## Plot average time-normalized tajectories
-```{r,fig.width=5}
+```{r}
 mt_plot_aggregate(mt_data, use = "tn_trajectories", points=TRUE,
   x = "xpos", y = "ypos", color = "Condition", subject_id = "subject_nr")+
   theme(legend.position=c(.2,.2))+
   xlab("x coordinate (px)") + ylab("y coordinate (px)")+
-  scale_color_grey(start = .55,end=.20)
+  scale_color_grey(start = .55, end = .20)
 
 # ggsave("figures/Figure5.png",width=8.5, height=10,unit="cm",dpi=1200)
 # ggsave("figures/Figure5.pdf",width=8.5, height=10,unit="cm")
 # ggsave("figures/Figure5.eps",width=8.5, height=10,unit="cm")
 ```
 
+## Comparison of measures based on time-normalized vs. raw trajectories
+```{r}
+mt_data <- mt_measures(mt_data,use="tn_trajectories",save_as="tn_measures")
+diag(cor(mt_data$measures[,-1],mt_data$tn_measures[,-1]))
+```
 
 ## Comparison of MAD aggregated per participant
 ```{r}
