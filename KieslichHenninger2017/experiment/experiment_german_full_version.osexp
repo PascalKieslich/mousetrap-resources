@@ -1,0 +1,436 @@
+---
+API: 2
+OpenSesame: 3.1.4
+Platform: nt
+---
+set width 1680
+set uniform_coordinates yes
+set title categorization
+set subject_parity even
+set subject_nr 0
+set start experiment
+set sound_sample_size -16
+set sound_freq 48000
+set sound_channels 2
+set sound_buf_size 1024
+set sampler_backend legacy
+set round_decimals 2
+set mouse_backend legacy
+set keyboard_backend legacy
+set height 1050
+set fullscreen no
+set form_clicks no
+set foreground black
+set font_underline no
+set font_size 24
+set font_italic no
+set font_family sans
+set font_bold no
+set experiment_path "C:\\Users\\Pascal\\Dropbox\\mousetrap-example\\experiment"
+set disable_garbage_collection yes
+set description "Default description"
+set coordinates uniform
+set compensation 0
+set color_backend legacy
+set clock_backend legacy
+set canvas_backend legacy
+set bidi no
+set background white
+
+define loop check_input
+	set source_file ""
+	set source table
+	set skip 0
+	set repeat 1000
+	set order random
+	set offset no
+	set item get_ids
+	set description "Repeatedly runs another item"
+	set cycles 1
+	set continuous no
+	set column_order ""
+	set break_if_on_first yes
+	set break_if "[vp_nr]!=[empty]"
+	setcycle 0 empty_column ""
+	run get_ids
+
+define inline_script create_backup
+	set description "Executes Python code"
+	___run__
+	import shutil,os, datetime
+	
+	now = datetime.datetime.now()
+	current_time = now.strftime("%Y-%m-%d__%H-%M")
+	
+	filename = "Vp"+str(var.vp_nr)+"_Date-"+current_time
+	
+	shutil.copyfile(var.logfile,os.path.join(var.experiment_path,"Teil2_backup",filename+".csv"))
+	__end__
+	set _prepare ""
+
+define inline_script create_backup_folder
+	set description "Executes Python code"
+	___run__
+	import shutil,os
+	
+	backup_path = os.path.join(var.experiment_path,"Teil2_backup")
+	if not os.path.isdir(backup_path):
+	    os.makedirs(backup_path)
+	__end__
+	set _prepare ""
+
+define sketchpad empty_screen
+	set duration 1000
+	set description "Displays stimuli"
+
+define feedback end
+	set reset_variables yes
+	set duration 0
+	set description "Provides feedback to the participant"
+	draw textline center=1 color=black font_bold=no font_family=sans font_italic=no font_size=24 html=yes show_if=always text="Vielen Dank. Sie haben diesen Teil der Studie abgeschlossen.<br /><br />Bitte wenden Sie sich leise per Handzeichen an die Versuchsleitung." x=32 y=0 z_index=0
+
+define keyboard_response end_keyboard
+	set timeout infinite
+	set flush yes
+	set duration keypress
+	set description "Collects keyboard responses"
+	set allowed_responses q
+
+define sequence experiment
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run create_backup_folder always
+	run set_layout always
+	run set_check_variable always
+	run check_input always
+	run instructions always
+	run practice always
+	run reset_feedback always
+	run start_task always
+	run stimuli always
+	run create_backup always
+	run end always
+	run end_keyboard always
+
+define form_base get_ids
+	set timeout infinite
+	set spacing 0
+	set rows "1;1;1;1;1;1;1;1;1;1"
+	set only_render no
+	set margins "0;0;0;0"
+	set description "A generic form plug-in"
+	set cols "1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1"
+	set _theme gray
+	widget 0 1 16 1 label text="<b>Bitte warten Sie, bis die Versuchsleitung das Experiment startet.</b>"
+	widget 0 2 16 1 label text="Vp-Nr:"
+	widget 6 3 4 1 text_input return_accepts=yes var=vp_nr
+
+
+define mousetrap_response get_response
+	set warning_message ""
+	set update_feedback yes
+	set timeout infinite
+	set start_coordinates "0;440"
+	set skip_item no
+	set save_trajectories yes
+	set reset_mouse no
+	set number_of_buttons 2
+	set mouse_buttons_allowed "1;3"
+	set max_initiation_time 1000
+	set logging_resolution 10
+	set description "Tracks mouse movements"
+	set correct_button "[Category1]"
+	set click_required yes
+	set check_initiation_time no
+	set button4 ""
+	set button3 ""
+	set button2 "h=[b_h] w=[b_w_n] x=[b_x] y=[b_y_n]   name=[CategoryRight]"
+	set button1 "h=[b_h] w=[b_w] x=[b_x_n] y=[b_y_n] name=[CategoryLeft]"
+	set boundaries "upper=no lower=no left=no right=no"
+
+define mousetrap_response get_start_click
+	set warning_message ""
+	set update_feedback no
+	set timeout infinite
+	set start_coordinates "0;280"
+	set skip_item no
+	set save_trajectories no
+	set reset_mouse no
+	set number_of_buttons 1
+	set mouse_buttons_allowed "1;3"
+	set max_initiation_time 1000
+	set logging_resolution 10
+	set description "Tracks mouse movements"
+	set correct_button ""
+	set click_required yes
+	set check_initiation_time no
+	set button4 ""
+	set button3 ""
+	set button2 ""
+	set button1 "h=[b_h_n] w=[b_w] x=-175 y=[b_y] name=Start"
+	set boundaries "upper=no lower=no left=no right=no"
+
+define form_text_display instructions
+	set timeout infinite
+	set spacing 10
+	set rows "1;4;1"
+	set only_render no
+	set ok_text Start
+	set margins "50;50;50;50"
+	set form_title "<b><span size=30>Instruktion</span></b>"
+	__form_text__
+	Im Folgenden wird Ihnen eine Reihen von Tieren präsentiert.
+	Ihre Aufgabe besteht darin, diese Tiere einer von zwei Kategorien zuzuordnen.
+	
+	Zunächst werden Ihnen nur die beiden möglichen Kategorien dargeboten.
+	Nach 2 Sekunden erscheint ein Button mit der Aufschrift "Hier klicken".
+	
+	Sobald Sie darauf klicken, erscheint der Name des zu beurteilenden Tieres. 
+	Klicken Sie bitte danach auf die Kategorie, zu der das Tier gehört.
+	
+	Im Folgenden werden Sie drei Übungsdurchgänge bearbeiten, um sich mit der Aufgabe vertraut zu machen.
+	Bitte klicken Sie auf "Start", um mit den Übungsdurchgängen zu beginnen.
+	__end__
+	set description "A simple text display form"
+	set cols "1;1;1"
+	set _theme gray
+	widget 0 0 3 1 label text="[form_title]"
+	widget 0 1 3 1 label center=yes text="[form_text]"
+	widget 1 2 1 1 button text="[ok_text]"
+
+
+define logger logger
+	set description "Logs experimental data"
+	set auto_log yes
+
+define loop practice
+	set source_file ""
+	set source table
+	set skip 0
+	set repeat 1
+	set order random
+	set offset no
+	set item random_side
+	set description "Repeatedly runs another item"
+	set cycles 3
+	set continuous no
+	set column_order "Exemplar;Category1;Category2;Condition"
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 Category1 Säugetier
+	setcycle 0 Category2 Amphibie
+	setcycle 0 Exemplar Giraffe
+	setcycle 0 Condition Example
+	setcycle 1 Category1 Vogel
+	setcycle 1 Category2 Reptil
+	setcycle 1 Exemplar Taube
+	setcycle 1 Condition Example
+	setcycle 2 Category1 Insekt
+	setcycle 2 Category2 Fisch
+	setcycle 2 Exemplar Biene
+	setcycle 2 Condition Example
+	run random_side
+
+define sketchpad present_categories
+	set duration 2000
+	set description "Displays stimuli"
+	draw rect color=black fill=0 h="[b_h]" penwidth=1 show_if=always w="[b_w]" x="[=-var.b_x]" y="[b_y_n]" z_index=0
+	draw rect color=black fill=0 h="[b_h]" penwidth=1 show_if=always w="[=-var.b_w]" x="[b_x]" y="[b_y_n]" z_index=0
+	draw textline center=1 color=black font_bold=no font_family=sans font_italic=no font_size=32 html=yes show_if=always text="[CategoryLeft]" x="[=-var.b_x+var.b_w/2]" y="[=var.b_y_n+var.b_h/2]" z_index=0
+	draw textline center=1 color=black font_bold=no font_family=sans font_italic=no font_size=32 html=yes show_if=always text="[CategoryRight]" x="[=var.b_x-var.b_w/2]" y="[=var.b_y_n+var.b_h/2]" z_index=0
+
+define sketchpad present_start
+	set duration 0
+	set description "Displays stimuli"
+	draw rect color=black fill=0 h="[b_h]" penwidth=1 show_if=always w="[b_w]" x="[=-var.b_x]" y="[b_y_n]" z_index=0
+	draw rect color=black fill=0 h="[b_h]" penwidth=1 show_if=always w="[=-var.b_w]" x="[b_x]" y="[b_y_n]" z_index=0
+	draw textline center=1 color=black font_bold=no font_family=sans font_italic=no font_size=32 html=yes show_if=always text="[CategoryLeft]" x="[=-var.b_x+var.b_w/2]" y="[=var.b_y_n+var.b_h/2]" z_index=0
+	draw textline center=1 color=black font_bold=no font_family=sans font_italic=no font_size=32 html=yes show_if=always text="[CategoryRight]" x="[=var.b_x-var.b_w/2]" y="[=var.b_y_n+var.b_h/2]" z_index=0
+	draw textline center=1 color=black font_bold=no font_family=sans font_italic=no font_size=32 html=yes show_if=always text="Hier klicken" x=0 y="[=var.b_y-var.b_h/2]" z_index=0
+	draw rect color=black fill=0 h="[=-var.b_h]" penwidth=1 show_if=always w="[b_w]" x="[=-var.b_w/2]" y="[b_y]" z_index=0
+
+define sketchpad present_stimulus
+	set duration 0
+	set description "Displays stimuli"
+	draw rect color=black fill=0 h="[b_h]" penwidth=1 show_if=always w="[b_w]" x="[=-var.b_x]" y="[b_y_n]" z_index=0
+	draw rect color=black fill=0 h="[b_h]" penwidth=1 show_if=always w="[=-var.b_w]" x="[b_x]" y="[b_y_n]" z_index=0
+	draw textline center=1 color=black font_bold=no font_family=sans font_italic=no font_size=32 html=yes show_if=always text="[CategoryLeft]" x="[=-var.b_x+var.b_w/2]" y="[=var.b_y_n+var.b_h/2]" z_index=0
+	draw textline center=1 color=black font_bold=no font_family=sans font_italic=no font_size=32 html=yes show_if=always text="[CategoryRight]" x="[=var.b_x-var.b_w/2]" y="[=var.b_y_n+var.b_h/2]" z_index=0
+	draw textline center=1 color=black font_bold=no font_family=sans font_italic=no font_size=32 html=yes show_if=always text="[Exemplar]" x=0 y="[s_y]" z_index=0
+
+define loop random_side
+	set source_file ""
+	set source table
+	set skip 0
+	set repeat 0.5
+	set order random
+	set offset no
+	set item trial
+	set description "Repeatedly runs another item"
+	set cycles 2
+	set continuous no
+	set column_order "CategoryLeft;CategoryRight"
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 CategoryRight "[Category2]"
+	setcycle 0 CategoryLeft "[Category1]"
+	setcycle 1 CategoryRight "[Category1]"
+	setcycle 1 CategoryLeft "[Category2]"
+	run trial
+
+define reset_feedback reset_feedback
+	set description "Resets the feedback variables, such as 'avg_rt' and 'acc'"
+
+define inline_script set_check_variable
+	set description "Executes Python code"
+	___run__
+	var.vp_nr=""
+	var.empty=""
+	__end__
+	set _prepare ""
+
+define inline_script set_layout
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	var.b_x= 840
+	var.b_y = 525
+	var.b_w = 350
+	var.b_h= 170
+	var.s_y= 355
+	
+	var.b_x_n = -var.b_x
+	var.b_w_n = -var.b_w
+	var.b_y_n = -var.b_y
+	var.b_h_n = -var.b_h
+	
+	var.b_x_n_2 = -var.b_x/2
+	__end__
+
+define form_text_display start_task
+	set timeout infinite
+	set spacing 10
+	set rows "1;4;1"
+	set only_render no
+	set ok_text Start
+	set margins "50;50;50;50"
+	set form_title "<b><span size=30>Aufgabe</span></b>"
+	__form_text__
+	Vielen Dank! Sie haben die Übungsdurchgänge bearbeitet.
+		
+	Im Folgenden werden Sie mit der Bearbeitung der eigentlichen Aufgabe beginnen.
+	Dabei werden Sie gebeten, 19 verschiedene Tiere der jeweils korrekten Kategorie zuzuordnen.
+	
+	Bitte klicken Sie auf "Start", um mit der Bearbeitung der Aufgabe zu beginnen.
+	__end__
+	set description "A simple text display form"
+	set cols "1;1;1"
+	set _theme gray
+	widget 0 0 3 1 label text="[form_title]"
+	widget 0 1 3 1 label center=yes text="[form_text]"
+	widget 1 2 1 1 button text="[ok_text]"
+
+
+define loop stimuli
+	set source_file ""
+	set source table
+	set skip 0
+	set repeat 1
+	set order random
+	set offset no
+	set item random_side
+	set description "Repeatedly runs another item"
+	set cycles 19
+	set continuous no
+	set column_order "Exemplar;Category1;Category2;Condition"
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 Category1 Fisch
+	setcycle 0 Category2 Reptil
+	setcycle 0 Exemplar Aal
+	setcycle 0 Condition Atypical
+	setcycle 1 Category1 Säugetier
+	setcycle 1 Category2 Fisch
+	setcycle 1 Exemplar Wal
+	setcycle 1 Condition Atypical
+	setcycle 2 Category1 Säugetier
+	setcycle 2 Category2 Fisch
+	setcycle 2 Exemplar Seelöwe
+	setcycle 2 Condition Atypical
+	setcycle 3 Category1 Vogel
+	setcycle 3 Category2 Fisch
+	setcycle 3 Exemplar Pinguin
+	setcycle 3 Condition Atypical
+	setcycle 4 Category1 Insekt
+	setcycle 4 Category2 Vogel
+	setcycle 4 Exemplar Schmetterling
+	setcycle 4 Condition Atypical
+	setcycle 5 Category1 Säugetier
+	setcycle 5 Category2 Vogel
+	setcycle 5 Exemplar Fledermaus
+	setcycle 5 Condition Atypical
+	setcycle 6 Category1 Vogel
+	setcycle 6 Category2 Reptil
+	setcycle 6 Exemplar Falke
+	setcycle 6 Condition Typical
+	setcycle 7 Category1 Säugetier
+	setcycle 7 Category2 Insekt
+	setcycle 7 Exemplar Hund
+	setcycle 7 Condition Typical
+	setcycle 8 Category1 Säugetier
+	setcycle 8 Category2 Vogel
+	setcycle 8 Exemplar Pferd
+	setcycle 8 Condition Typical
+	setcycle 9 Category1 Fisch
+	setcycle 9 Category2 Säugetier
+	setcycle 9 Exemplar Hai
+	setcycle 9 Condition Typical
+	setcycle 10 Category1 Reptil
+	setcycle 10 Category2 Säugetier
+	setcycle 10 Exemplar Alligator
+	setcycle 10 Condition Typical
+	setcycle 11 Category1 Säugetier
+	setcycle 11 Category2 Reptil
+	setcycle 11 Exemplar Kaninchen
+	setcycle 11 Condition Typical
+	setcycle 12 Category1 Reptil
+	setcycle 12 Category2 Insekt
+	setcycle 12 Exemplar Chamäleon
+	setcycle 12 Condition Typical
+	setcycle 13 Category1 Säugetier
+	setcycle 13 Category2 Reptil
+	setcycle 13 Exemplar Katze
+	setcycle 13 Condition Typical
+	setcycle 14 Category1 Vogel
+	setcycle 14 Category2 Säugetier
+	setcycle 14 Exemplar Spatz
+	setcycle 14 Condition Typical
+	setcycle 15 Category1 Fisch
+	setcycle 15 Category2 Amphibie
+	setcycle 15 Exemplar Goldfisch
+	setcycle 15 Condition Typical
+	setcycle 16 Category1 Fisch
+	setcycle 16 Category2 Säugetier
+	setcycle 16 Exemplar Lachs
+	setcycle 16 Condition Typical
+	setcycle 17 Category1 Reptil
+	setcycle 17 Category2 Amphibie
+	setcycle 17 Exemplar Klapperschlange
+	setcycle 17 Condition Typical
+	setcycle 18 Category1 Säugetier
+	setcycle 18 Category2 Fisch
+	setcycle 18 Exemplar Löwe
+	setcycle 18 Condition Typical
+	run random_side
+
+define sequence trial
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run empty_screen always
+	run present_categories always
+	run present_start always
+	run get_start_click always
+	run present_stimulus always
+	run get_response always
+	run logger always
+
