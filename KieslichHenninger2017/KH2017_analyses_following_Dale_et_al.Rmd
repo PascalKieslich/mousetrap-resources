@@ -1,0 +1,247 @@
+---
+title: "KH2017 reanalysis following Dale et al. (2007)"
+author: "Pascal J. Kieslich & Felix Henninger"
+output:
+  pdf_document: 
+    fig_height: 4
+    fig_width: 4
+---
+
+# References
+Data from: Kieslich, P. J., & Henninger, F. (in press). Mousetrap: An integrated, open-source mouse-tracking package. _Behavior Research Methods_.
+https://doi.org/10.3758/s13428-017-0900-z
+
+Analyses following: Dale, R., Kehoe, C., & Spivey, M. J. (2007). Graded motor responses in the time course of categorizing atypical exemplars.
+_Memory & Cognition, 35_(1), 15-28.
+https://doi.org/10.3758/BF03195938
+
+
+
+# General preparations
+
+## Load libraries
+```{r,message=FALSE}
+library(mousetrap)
+library(ggplot2)
+library(afex)
+```
+
+## Custom ggplot2 theme
+```{r}
+theme_set(theme_classic()+ 
+  theme(
+    axis.line = element_line(colour = "black"),
+    axis.ticks = element_line(colour = "black"),
+    axis.text = element_text(colour = "black"),
+    panel.border = element_rect(colour = "black", fill=NA)
+  ))
+```
+
+
+
+# Data preparation
+
+## Read in merged raw data
+```{r}
+raw_data <- KH2017_raw
+```
+
+## Filter trials
+```{r}
+# Look at percent of correct responses per Condition
+with(raw_data,table(Condition, correct)/c(table(Condition)))
+
+# Test difference using chi-squared test
+chisq.test(with(raw_data,table(Condition, correct)))
+
+# Exlude incorrect trials
+raw_data <- subset(raw_data, correct==1)
+
+# Check that each subject has at least one typical and atypical trial left
+table(with(raw_data,table(subject_nr,Condition))>0)
+```
+
+## Import mouse-tracking data
+```{r}
+mt_data <- mt_import_mousetrap(raw_data)
+```
+
+## Trajectory preprocessing
+```{r}
+mt_data <- mt_remap_symmetric(mt_data)
+mt_data <- mt_align_start(mt_data)
+mt_data <- mt_time_normalize(mt_data)
+```
+
+
+
+# Analyses
+
+## Analysis of time-normalized trajectories
+
+### Plot average time-normalized tajectories
+```{r}
+mt_plot_aggregate(mt_data, use = "tn_trajectories", points = TRUE,
+  x = "xpos", y = "ypos", color = "Condition", subject_id = "subject_nr")+
+  scale_color_brewer(type="qual",palette = "Set1" )+
+  theme(legend.position=c(.2,.2))
+```
+
+
+### Compare time normalized x-positions for each step
+```{r}
+# Aggregate time-normalized trajectories per condition
+# separately per subject
+av_tn_trajectories <- mt_aggregate_per_subject(mt_data,
+  use="tn_trajectories",use2_variables="Condition",subject_id="subject_nr")
+
+# Plot aggregate trajectories with standard errors
+# (note that mean_se does not take into account within subjects design)
+ggplot(av_tn_trajectories,aes(x=steps,y=xpos,group=Condition))+
+  stat_summary(geom = "ribbon",fun.data=mean_se,alpha=.2)+
+  geom_line(aes(color=Condition),stat="summary",fun.y="mean")+
+  scale_color_brewer(type="qual",palette = "Set1" )+
+  theme(legend.position=c(.2,.2))
+
+
+### Paired t-tests on coordinates
+xpos_t_tests <- 
+  with(av_tn_trajectories,
+       sapply(unique(steps),function(i){
+         t.test(xpos[Condition=="Atypical" & steps==i],
+                xpos[Condition=="Typical" & steps==i],
+                paired = TRUE)$p.value})
+       )
+
+# Retrieve all significant t-tests
+which(xpos_t_tests<.05)
+
+# Number of significant t-tests
+sum(xpos_t_tests<.05,na.rm=TRUE)
+
+# Number of adjacent significant t-tests (minus 1)
+table(diff(which(xpos_t_tests<.05)))
+```
+
+
+### Analysis of binned time-normalized trajectories
+```{r,message=FALSE,warning=FALSE}
+mt_data <- mt_average(mt_data,use="tn_trajectories",save_as="av_tn_trajectories",
+  av_dimension="steps",intervals = c(0.5,33.5,67.5,101.5))
+
+mt_aggregate(mt_data,use = "av_tn_trajectories",
+  use2_variables = "Condition",subject_id = "subject_nr")
+
+mt_plot_aggregate(mt_data,use = "av_tn_trajectories", points=TRUE,
+  color = "Condition",subject_id = "subject_nr")+
+  scale_color_brewer(type="qual",palette = "Set1" )
+
+
+av_tn_trajectory_bins <-  mt_aggregate_per_subject(mt_data,use="av_tn_trajectories",
+  use2_variables="Condition",subject_id="subject_nr")
+
+av_tn_trajectory_bins$bin <- factor(av_tn_trajectory_bins$steps)
+
+aov_ez(data=av_tn_trajectory_bins,id="subject_nr",dv="xpos",within = c("Condition","bin"),
+       anova_table = list(es=c("ges","pes"),correction=c("none")))
+
+aov_ez(data=av_tn_trajectory_bins,id="subject_nr",dv="xpos",within = c("Condition","bin"),
+       anova_table = list(es=c("ges","pes"),correction=c("GG")))
+```
+
+
+## Analysis of space normalized trajectories per subject
+
+```{r,message=FALSE,warning=FALSE}
+mt_data <- mt_align_start_end(mt_data,save_as="sn_trajectories",
+  start = c(0,0), end = c(-1,1))
+mt_data <- mt_average(mt_data,use="sn_trajectories",
+  interval_size = 500,max_interval=1500)
+
+mt_aggregate(mt_data,use="av_trajectories",
+  use2_variables="Condition",subject_id="subject_nr")
+
+mt_plot_aggregate(mt_data,use = "av_trajectories", points=TRUE,
+  color = "Condition",subject_id = "subject_nr")+
+  scale_color_brewer(type="qual",palette = "Set1" )
+
+av_sn_trajectory_bins <-  mt_aggregate_per_subject(mt_data,use="av_trajectories",
+  use2_variables="Condition",subject_id="subject_nr")
+
+# Check that each subject has observations in each category
+table(table(av_sn_trajectory_bins$subject_nr))
+
+av_sn_trajectory_bins$bin <- factor(av_sn_trajectory_bins$timestamps)
+
+aov_ez(data=av_sn_trajectory_bins,id="subject_nr",dv="xpos",within = c("Condition","bin"),
+       anova_table = list(es=c("ges","pes"),correction=c("none")))
+
+aov_ez(data=av_sn_trajectory_bins,id="subject_nr",dv="xpos",within = c("Condition","bin"),
+       anova_table = list(es=c("ges","pes"),correction=c("GG")))
+```
+
+
+## Distributional analyses
+```{r}
+# Compute trial indices
+mt_data <- mt_measures(mt_data)
+
+# Standardize measures per participant
+mt_data <- mt_standardize(mt_data,
+  use_variables = c("MAD","AUC","AD"),within = "subject_nr",prefix = "z_")
+
+# Merge data
+results <- merge(mt_data$data,mt_data$measures,by="mt_id")
+
+# Distribution
+qplot(x=z_MAD,data=results,bins=50)+facet_grid(Condition~.)
+qplot(x=z_AUC,data=results,bins=50)+facet_grid(Condition~.)
+qplot(x=z_AD,data=results,bins=50)+facet_grid(Condition~.)
+
+# Calculate bimodality coefficient
+mt_check_bimodality(mt_data,use_variables = c("z_MAD","z_AUC","z_AD"),
+  grouping_variables = "Condition", methods = c("BC"))
+
+```
+
+
+## Sample entropy
+```{r}
+# Calculate sample entropy (for lag 3)
+mt_data <- mt_sample_entropy(mt_data,use="tn_trajectories",m=3,dimension="xpos")
+
+# Aggregate per participant
+agg_sample_entropy <- mt_aggregate_per_subject(mt_data, subject_id = "subject_nr",
+  use_variables = "sample_entropy", use2_variables = "Condition")
+
+# Test the difference
+mt_aggregate(mt_data, subject_id = "subject_nr",
+  use_variables = "sample_entropy", use2_variables = "Condition")
+t.test(sample_entropy~Condition, data=agg_sample_entropy, paired=TRUE)
+```
+
+
+
+# Plot for left- and rightward responses
+
+## Data preparation
+```{r}
+mt_data <- mt_import_mousetrap(raw_data)
+mt_data <- mt_remap_symmetric(mt_data,remap_xpos = "no")
+mt_data <- mt_align_start(mt_data)
+mt_data <- mt_time_normalize(mt_data)
+
+# code response side
+mt_data$data$side <- ifelse(mt_data$data$response==mt_data$data$CategoryLeft,"left","right")
+```
+
+
+## Plot average time-normalized tajectories
+```{r,fig.width=7}
+mt_plot_aggregate(mt_data, use = "tn_trajectories", points = TRUE,
+  x = "xpos", y = "ypos", color = "Condition", subject_id = "subject_nr",
+  linetype = "side")+
+  scale_color_brewer(type="qual",palette = "Set1" )+
+  theme(legend.position=c(.15,.3))
+```
+
