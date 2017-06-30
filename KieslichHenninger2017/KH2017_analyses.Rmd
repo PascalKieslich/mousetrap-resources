@@ -1,5 +1,5 @@
 ---
-title: "Paper analyses"
+title: "KH2017 analyses (Behavior Research Methods, in press)"
 author: "Pascal J. Kieslich & Felix Henninger"
 output:
   pdf_document: 
@@ -7,6 +7,9 @@ output:
     fig_width: 4
 ---
 
+# Reference
+Kieslich, P. J., & Henninger, F. (in press). Mousetrap: An integrated, open-source mouse-tracking package. _Behavior Research Methods_.
+https://doi.org/10.3758/s13428-017-0900-z
 
 # General preparations
 
@@ -26,6 +29,8 @@ theme_set(theme_classic()+
     axis.text = element_text(colour = "black"),
     panel.border = element_rect(colour = "black", fill=NA)
   ))
+
+options(width=90)
 ```
 
 
