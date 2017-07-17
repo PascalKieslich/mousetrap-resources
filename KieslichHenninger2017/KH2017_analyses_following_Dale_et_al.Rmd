@@ -239,9 +239,10 @@ mt_data$data$side <- ifelse(mt_data$data$response==mt_data$data$CategoryLeft,"le
 ## Plot average time-normalized tajectories
 ```{r,fig.width=7}
 mt_plot_aggregate(mt_data, use = "tn_trajectories", points = TRUE,
-  x = "xpos", y = "ypos", color = "Condition", subject_id = "subject_nr",
+  x = "xpos", y = "ypos", color = "Condition",
   linetype = "side")+
   scale_color_brewer(type="qual",palette = "Set1" )+
-  theme(legend.position=c(.15,.3))
+  scale_linetype_manual(values=c("solid","solid"),guide=FALSE)+
+  theme(legend.position=c(.15,.2))
 ```
 
