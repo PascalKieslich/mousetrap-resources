@@ -8,7 +8,7 @@ output:
 ---
 
 # References
-Data from: Kieslich, P. J., & Henninger, F. (in press). Mousetrap: An integrated, open-source mouse-tracking package. _Behavior Research Methods_.
+Data from: Kieslich, P. J., & Henninger, F. (2017). Mousetrap: An integrated, open-source mouse-tracking package. _Behavior Research Methods, 49_(5), 1652-1667.
 https://doi.org/10.3758/s13428-017-0900-z
 
 Analyses following: Dale, R., Kehoe, C., & Spivey, M. J. (2007). Graded motor responses in the time course of categorizing atypical exemplars.

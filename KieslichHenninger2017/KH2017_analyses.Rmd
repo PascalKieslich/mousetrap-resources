@@ -1,5 +1,5 @@
 ---
-title: "KH2017 analyses (Behavior Research Methods, in press)"
+title: "KH2017 analyses (Behavior Research Methods, 2017)"
 author: "Pascal J. Kieslich & Felix Henninger"
 output:
   pdf_document: 
@@ -8,7 +8,7 @@ output:
 ---
 
 # Reference
-Kieslich, P. J., & Henninger, F. (in press). Mousetrap: An integrated, open-source mouse-tracking package. _Behavior Research Methods_.
+Kieslich, P. J., & Henninger, F. (2017). Mousetrap: An integrated, open-source mouse-tracking package. _Behavior Research Methods, 49_(5), 1652-1667.
 https://doi.org/10.3758/s13428-017-0900-z
 
 # General preparations
