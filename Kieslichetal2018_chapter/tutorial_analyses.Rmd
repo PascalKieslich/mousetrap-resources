@@ -13,7 +13,7 @@ output:
 ```{r,message=FALSE}
 library(mousetrap)
 library(ggplot2)
-library(dplyr) # todo: check if needed
+library(dplyr)
 ```
 
 ## Custom ggplot2 theme
@@ -40,17 +40,22 @@ mt_data <- mt_import_mousetrap(KH2017_raw)
 
 ## Spatial transformations
 ```{r}
+# Remap trajectories
 mt_data <- mt_remap_symmetric(mt_data)
+
+# Align trajectories to common start position
 mt_data <- mt_align_start(mt_data, start=c(0,0))
 ```
 
 ## Resampling
 ```{r}
+# Time-normalize trajectories
 mt_data <- mt_time_normalize(mt_data) 
 ```
 
 ## Filtering
 ```{r}
+# Only keep trials with correct answers
 mt_data <- mt_subset(mt_data, correct==1)
 ```
 
@@ -67,8 +72,13 @@ mt_plot_aggregate(mt_data, use="tn_trajectories",
 
 ## Calculate measures
 ```{r}
+# Calculate velocity and acceleration
 mt_data <- mt_derivatives(mt_data)
+
+# Calculate trial-level indices
 mt_data <- mt_measures(mt_data)
+
+# Calculate sample entropy
 mt_data <- mt_sample_entropy(mt_data, use="tn_trajectories")
 ```
 
@@ -77,13 +87,15 @@ mt_data <- mt_sample_entropy(mt_data, use="tn_trajectories")
 
 ### Aggregate analyses
 ```{r}
+# Aggregate MAD values per participant and condition
 agg_mad <- mt_aggregate_per_subject(mt_data, 
   use_variables="MAD", use2_variables="Condition",
   subject_id="subject_nr")
 
-
+# Compare aggregated MAD values
 t.test(MAD~Condition, data=agg_mad, paired=TRUE)
 
+# Calculate descriptives
 agg_mad %>% 
   group_by(Condition) %>% 
   summarise_at("MAD",.funs=c("mean","sd")) %>%
@@ -105,26 +117,48 @@ mixed(MAD ~ (1+Condition|subject_nr)+Condition, data=results)
 ```
 
 
-
 ## Trajectory types
+
+### Heatmap of individual trajectories
+Fig. 5, top
 ```{r}
-# Heatmap of individual trajectories (Fig. 5, top)
-mt_heatmap(mt_data, xres=1000, colors=c("white","black"))
+mt_heatmap(mt_data,
+  xres=1000,
+  colors=c("white","black"))
+```
 
-# Smoothed heatmap (Fig. 5, middle)
-mt_heatmap(mt_data, xres=1000, colors=c("white","black"),
-  smooth_radius=20, n_shades=10, mean_image=0.2)
+\pagebreak
 
-# Difference of heatmaps between conditions (Fig. 5, bottom)
-mt_diffmap(mt_data, xres=1000,
+### Smoothed heatmap
+Fig. 5, middle
+```{r}
+mt_heatmap(mt_data,
+  xres=1000,
+  colors=c("white","black"),
+  smooth_radius=20,
+  n_shades=10,
+  mean_image=0.2)
+```
+
+\pagebreak
+
+### Difference of heatmaps between conditions
+Fig. 5, bottom
+```{r}
+mt_diffmap(mt_data,
+  xres=1000,
   condition=mt_data$data$Condition=="Typical",
   colors=c("steelblue","white","darkorange"),
-  smooth_radius=20, n_shades=10)
+  smooth_radius=20,
+  n_shades=10)
 ```
 
 
+\pagebreak
 
 ## Temporal analyses
+
+### Average x positions
 ```{r,fig.width=8}
 # Plot aggregate time-normalized x-positions (Fig. 6)
 mt_plot_aggregate(mt_data, use="tn_trajectories",
@@ -149,8 +183,13 @@ xpos_t_tests <-
 
 # Retrieve all significant t-tests
 which(xpos_t_tests<.05)
+```
 
-# Create riverbed plot (Fig. 7)
+\pagebreak
+
+### Riverbed plot
+Fig. 7
+```{r}
 mt_plot_riverbed(mt_data, use="tn_trajectories",
   y="xpos", facet_col="Condition")
 
