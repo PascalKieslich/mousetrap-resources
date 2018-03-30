@@ -10,3 +10,11 @@ This article presents the [mousetrap plugin for OpenSesame](https://github.com/p
 In the article, an example experiment is created following Experiment 1 by [Dale et al. (2007)](https://doi.org/10.3758/BF03195938). The complete experiment (with German material and instructions) and a simplified but with regard to the task identical version (with English example material and instructions) can be found in the [experiment folder](KieslichHenninger2017/experiment).
 
 Using this experiment, a study was conducted. The resulting [raw data](KieslichHenninger2017/merged_data/raw_data.csv.gz) can be found online. Besides, Kieslich and Henninger (2017) demonstrated a number of simple analyses using the [mousetrap R package](http://pascalkieslich.github.io/mousetrap/) for which the [analyses scripts](KieslichHenninger2017/KH2017_analyses.Rmd) and [results](KieslichHenninger2017/KH2017_analyses.pdf) are provided as well as a number of [additional analyses](KieslichHenninger2017/KH2017_analyses_following_Dale_et_al.pdf) following the original analyses by Dale et al. (2007).
+
+## Kieslich, Henninger, Wulff, Haslbeck, & Schulte-Mecklenbeck (submitted)
+
+This book chapters presents a tutorial into creating mouse-tracking experiments using the [mousetrap plugin for OpenSesame](https://github.com/pascalkieslich/mousetrap-os) and into analyzing mouse-tracking data using the [mousetrap R package](http://pascalkieslich.github.io/mousetrap/).
+
+In the chapter, an example experiment is created following Experiment 1 by [Dale et al. (2007)](https://doi.org/10.3758/BF03195938). The tutorial experiment is provided [online](Kieslichetal2018_chapter/tutorial_experiment.osexp).
+
+Besides, the chapter gives an introduction into analyzing mouse-tracking data for which the [analyses scripts](Kieslichetal2018_chapter/tutorial_analyses.Rmd) and [results](Kieslichetal2018_chapter/tutorial_analyses.pdf) are provided.
