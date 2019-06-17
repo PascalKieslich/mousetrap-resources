@@ -11,10 +11,10 @@ In the article, an example experiment is created following Experiment 1 by [Dale
 
 Using this experiment, a study was conducted. The resulting [raw data](KieslichHenninger2017/merged_data/raw_data.csv.gz) can be found online. Besides, Kieslich and Henninger (2017) demonstrated a number of simple analyses using the [mousetrap R package](http://pascalkieslich.github.io/mousetrap/) for which the [analyses scripts](KieslichHenninger2017/KH2017_analyses.Rmd) and [results](KieslichHenninger2017/KH2017_analyses.pdf) are provided as well as a number of [additional analyses](KieslichHenninger2017/KH2017_analyses_following_Dale_et_al.pdf) following the original analyses by Dale et al. (2007).
 
-## Kieslich, Henninger, Wulff, Haslbeck, & Schulte-Mecklenbeck (under revision)
+## Kieslich, Henninger, Wulff, Haslbeck, & Schulte-Mecklenbeck (2019)
 
-This book chapter provides a tutorial introduction to creating mouse-tracking experiments using the [mousetrap plugin for OpenSesame](https://github.com/pascalkieslich/mousetrap-os), and to analyzing mouse-tracking data using the [mousetrap R package](http://pascalkieslich.github.io/mousetrap/).
+This book chapter provides a tutorial introduction to creating mouse-tracking experiments using the [mousetrap plugin for OpenSesame](https://github.com/pascalkieslich/mousetrap-os), and to analyzing mouse-tracking data using the [mousetrap R package](http://pascalkieslich.github.io/mousetrap/). The preprint is available in [PsyArXiv](https://psyarxiv.com/zuvqa/).
 
-In the chapter, an example experiment is created following Experiment 1 by [Dale et al. (2007)](https://doi.org/10.3758/BF03195938). The [tutorial experiment](Kieslichetal2018_chapter/tutorial_experiment.osexp) is provided as an OpenSesame file.
+In the chapter, an example experiment is created following Experiment 1 by [Dale et al. (2007)](https://doi.org/10.3758/BF03195938). The [tutorial experiment](Kieslichetal2019_chapter/tutorial_experiment.osexp) is provided as an OpenSesame file.
 
-Besides, the chapter demonstrates the analysis of mouse-tracking data, for which the [analyses scripts](Kieslichetal2018_chapter/tutorial_analyses.Rmd) and [results](Kieslichetal2018_chapter/tutorial_analyses.pdf) are available here.
+Besides, the chapter demonstrates the analysis of mouse-tracking data, for which the [analyses scripts](Kieslichetal2019_chapter/tutorial_analyses.Rmd) and [results](Kieslichetal2019_chapter/tutorial_analyses.pdf) are available here.
