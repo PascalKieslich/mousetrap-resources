@@ -2,7 +2,7 @@ This repository contains a number of resources for creating mouse-tracking exper
 They are grouped into different folders for different research projects (both published and work in progress).
 
 
-## Kieslich, Henninger, Wulff, Haslbeck, & Schulte-Mecklenbeck (2019)
+### Kieslich, Henninger, Wulff, Haslbeck, & Schulte-Mecklenbeck (2019)
 
 This book chapter provides a tutorial introduction to creating mouse-tracking experiments using the [mousetrap plugin for OpenSesame](https://github.com/pascalkieslich/mousetrap-os), and to analyzing mouse-tracking data using the [mousetrap R package](http://pascalkieslich.github.io/mousetrap/). The preprint is available in [PsyArXiv](https://psyarxiv.com/zuvqa/).
 
@@ -11,7 +11,7 @@ In the chapter, an example experiment is created following Experiment 1 by [Dale
 Besides, the chapter demonstrates the analysis of mouse-tracking data, for which the [analyses scripts](Kieslichetal2019_chapter/tutorial_analyses.Rmd) and [results](Kieslichetal2019_chapter/tutorial_analyses.pdf) are available here.
 
 
-## Kieslich & Henninger (2017)
+### Kieslich & Henninger (2017)
 
 This article presents the [mousetrap plugin for OpenSesame](https://github.com/pascalkieslich/mousetrap-os). It is published in [Behavior Research Methods](https://doi.org/10.3758/s13428-017-0900-z).
 
