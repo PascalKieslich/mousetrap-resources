@@ -11,7 +11,7 @@ output:
 
 # Introduction
 
-This tutorial illustrates how to use the mousetrap package to process, analyze and visualize movement trajectories. It accompanies a paper of the same name.
+This tutorial illustrates how to use the mousetrap package to process, analyze and visualize movement trajectories. It accompanies the paper of the same name.
 
 The R code in this tutorial performs all analyses and creates all trajectory data related figures that are presented in the paper.
 
