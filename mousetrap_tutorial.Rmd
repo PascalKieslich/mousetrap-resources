@@ -1,0 +1,1088 @@
+---
+title: "Movement-tracking of cognitive processes: A tutorial using mousetrap"
+author: "Dirk Wulff, Pascal Kieslich, Felix Henninger, Jonas Haslbeck & Michael Schulte-Mecklenbeck"
+output:
+  html_document:
+    df_print: paged
+    toc: true
+    toc_float: true
+    toc_depth: 1
+---
+
+# Introduction
+
+This tutorial illustrates how to use the mousetrap package to process, analyze and visualize movement trajectories. It accompanies a paper of the same name.
+
+The R code in this tutorial performs all analyses and creates all trajectory data related figures that are presented in the paper.
+
+After running the initialization section, all subsequent sections are self-contained. That is, each section can be run independently, as it prepares the data needed for its analysis and plot.
+
+# Initialization
+
+```{r setup, include = FALSE}
+# Set general chunk options
+knitr::opts_chunk$set(
+  echo = TRUE, message = FALSE, warning = FALSE,
+  # Set figure aspect ratio based on defaults from figure export function
+  fig.asp = 0.64
+  )
+```
+
+
+## Load libraries required in this tutorial
+```{r}
+library(mousetrap)
+library(tidyverse)
+library(patchwork)
+library(psych)
+library(MBESS)
+library(viridis)
+library(afex)
+library(osfr)
+```
+
+## Set custom ggplot2 theme and colors
+```{r}
+theme_set(theme_minimal())
+custom_colors <- cividis(5)
+custom_colors_3 <- custom_colors[c(1, 4, 5)]
+```
+
+```{r, include = FALSE}
+# Create custom figure export functions and set defaults
+
+# Specify if figures created in this tutorial should also be saved as files
+save_figures <- FALSE
+
+# Specify folder in current working directory where figures should be saved
+figure_path <- "3_figures"
+
+# Create export function for ggsave
+export_ggsave <- function(
+  filename, 
+  path = figure_path,
+  save = save_figures,
+  width = 6.3, height = 4.02, unit = "in", dpi = 300
+){
+  
+  # Only export figures if specified in general settings
+  if (save) {
+    ggsave(
+      filename = file.path(path, filename),
+      width = width, height = height, unit = unit, dpi = dpi
+    )
+  }
+}
+
+# Create export function for standard devices
+export_device <- function(
+  filename, 
+  path = figure_path,
+  save = save_figures,
+  current_plot,
+  device_function,
+  ...
+){
+  device_function(file.path(figure_path, filename), ...)
+  replayPlot(current_plot)
+  dev.off()
+}
+```
+
+
+# Figure 1: Setup
+
+## Preprocess data
+```{r}
+# Import and preprocess mouse-tracking data
+mt_data <- KH2017_raw %>%
+  filter(correct == 1) %>%
+  mt_import_mousetrap() %>%
+  mt_remap_symmetric() %>%
+  mt_align_start(start = NULL) %>%
+  mt_subset(mt_id %in% c("id0013", "id0030", "id0033"))
+
+# Specify coordinates of buttons that should be plotted
+rectangles <- matrix(
+  c(
+    -840, 525, 350, -170,
+    840, 525, -350, -170
+  ),
+  ncol = 4, byrow = TRUE
+)
+
+# Specify button labels
+button_labels <- data.frame(
+  label = c("Whale", "Mammal", "Fish"),
+  xpos = c(0, -665, 665),
+  ypos = c(-440 + 85 + 40, 440, 440)
+)
+```
+
+## Create plot
+```{r}
+mt_plot(mt_data, return_type = "mapping") +
+  mt_plot_add_rect(rectangles) +
+  coord_cartesian(xlim = c(-840, 840), ylim = c(-525, 525), expand = FALSE) +
+  geom_path(aes(color = mt_id), size = 2) +
+  geom_text(
+    aes(x = xpos, y = ypos, label = label), data = button_labels, size = 3.2
+    ) +
+  theme(legend.position = "none") +
+  scale_color_manual(values = custom_colors_3) +
+  labs(x = NULL, y = NULL)
+```
+
+```{r, include = FALSE}
+export_ggsave("figure_1_setup.pdf")
+```
+
+
+## Descriptives for raw trajectories
+```{r}
+mt_data <- KH2017_raw %>%
+  mt_import_mousetrap()
+summary(mt_count(mt_data$trajectories))
+summary(mt_data$data$response_time)
+```
+
+
+# Figure 4: Resampling
+
+## Preprocess data
+```{r}
+# Import and preprocess mouse-tracking data
+mt_data <- KH2017_raw %>%
+  filter(correct == 1) %>%
+  mt_import_mousetrap() %>%
+  mt_remap_symmetric(remap_xpos = "no") %>%
+  mt_subset(mt_id %in% c("id0013", "id0030", "id0033"))
+
+# Only select every second trajectory position
+mt_data$trajectories <- mt_data$trajectories[, seq(1, 151, 2), ]
+```
+
+## Create plot
+```{r}
+# Plot raw trajectories
+p1 <- mt_plot(mt_data, return_type = "mapping") +
+  geom_path(color = "white", alpha = 1, size = .3, show.legend = FALSE) +
+  geom_path(aes(color = mt_id), alpha = .7, size = .3, show.legend = FALSE) +
+  geom_point(color = "white", alpha = 1, show.legend = FALSE) +
+  geom_point(aes(color = mt_id), alpha = .7, show.legend = FALSE) +
+  coord_cartesian(xlim = c(-840, 840), ylim = c(-525, 525), expand = FALSE) +
+  scale_color_manual(values = custom_colors_3) +
+  labs(x = NULL, y = NULL) + 
+  theme(axis.text.x = element_blank())
+
+# Remap trajectories, align their start position and plot them
+mt_data <- mt_remap_symmetric(mt_data)
+mt_data <- mt_align_start(mt_data, start = NULL)
+p2 <- mt_plot(mt_data, return_type = "mapping") +
+  geom_path(color = "white", alpha = 1, size = .3, show.legend = FALSE) +
+  geom_path(aes(color = mt_id), alpha = .7, size = .3, show.legend = FALSE) +
+  geom_point(color = "white", alpha = 1, show.legend = FALSE) +
+  geom_point(aes(color = mt_id), alpha = .7, show.legend = FALSE) +
+  coord_cartesian(xlim = c(-840, 840), ylim = c(-525, 525), expand = FALSE) +
+  scale_color_manual(values = custom_colors_3) +
+  labs(x = NULL, y = NULL) + 
+  theme(axis.text.x = element_blank(), axis.text.y = element_blank())
+
+# Time normalize and plot trajectories
+mt_data <- mt_time_normalize(mt_data)
+p3 <- mt_plot(mt_data, use = "tn_trajectories", return_type = "mapping") +
+  geom_path(color = "white", alpha = 1, size = .3, show.legend = FALSE) +
+  geom_path(aes(color = mt_id), alpha = .7, size = .3, show.legend = FALSE) +
+  geom_point(color = "white", alpha = 1, show.legend = FALSE) +
+  geom_point(aes(color = mt_id), alpha = .7, show.legend = FALSE) +
+  coord_cartesian(xlim = c(-840, 840), ylim = c(-525, 525), expand = FALSE) +
+  scale_color_manual(values = custom_colors_3) +
+  labs(x = NULL, y = NULL)
+
+# Length normalize and plot trajectories
+mt_data <- mt_length_normalize(mt_data)
+p4 <- mt_plot(mt_data, use = "ln_trajectories", return_type = "mapping") +
+  geom_path(color = "white", alpha = 1, size = .3, show.legend = FALSE) +
+  geom_path(aes(color = mt_id), alpha = .7, size = .3, show.legend = FALSE) +
+  geom_point(color = "white", alpha = 1, show.legend = FALSE) +
+  geom_point(aes(color = mt_id), alpha = .7, show.legend = FALSE) +
+  coord_cartesian(xlim = c(-840, 840), ylim = c(-525, 525), expand = FALSE) +
+  scale_color_manual(values = custom_colors_3) +
+  labs(x = NULL, y = NULL) + 
+  theme(axis.text.y = element_blank())
+
+(p1 + p2) / (p3 + p4) & plot_annotation(tag_levels = "A")
+```
+
+```{r, include = FALSE}
+export_ggsave("figure_4_resampling.pdf")
+```
+
+
+# Figure 5: Outliers
+
+## Preprocess data
+```{r}
+# Preprocess mouse-tracking data
+mt_data <- KH2017 %>%
+  mt_time_normalize() %>%
+  mt_length_normalize() %>%
+  mt_map() %>%
+  mt_standardize(use = "prototyping", use_variables = "min_dist")
+
+# Classify outliers
+mt_data$data$outlier <- ifelse(
+  mt_data$prototyping$z_min_dist > 2,
+  "Distance > 2 SD", "Distance <= 2 SD"
+)
+```
+
+## Create plot
+```{r}
+mt_plot(mt_data, color = "outlier", return_type = "mapping") +
+  geom_path(aes(alpha = outlier)) +
+  theme(legend.position = c(.14, .2), legend.background = element_blank()) +
+  scale_color_manual(name = "", values = custom_colors[c(3, 1)]) +
+  scale_alpha_manual(name = "", values = c(.08, .6)) +
+  labs(x = NULL, y = NULL) +
+  coord_cartesian(xlim = c(-950, 950), ylim = c(-150, 1050), expand = FALSE)
+```
+
+```{r, include = FALSE}
+export_ggsave("figure_5_outliers.pdf")
+export_ggsave("figure_5_outliers.png")
+```
+
+
+# Figure 6: Trajectory indices
+
+## Preprocess data
+```{r}
+# Import and preprocess mouse-tracking data and compute indices
+mt_data <- KH2017_raw %>%
+  filter(correct == 1) %>%
+  mt_import_mousetrap() %>%
+  mt_remap_symmetric() %>%
+  mt_align_start() %>%
+  mt_time_normalize() %>%
+  mt_derivatives() %>%
+  mt_measures() %>%
+  mt_sample_entropy()
+
+# Calculate movement time
+mt_data$measures$movement <- mt_data$measures$RT - mt_data$measures$idle_time
+
+# Calculate motor pauses
+mt_data$measures$motor_pauses <-
+  mt_data$measures$idle_time - mt_data$measures$initiation_time
+
+# Select measures and specify labels
+measures <- mt_data$measures[, c(
+  "MAD", "MD_above", "AD", "AUC", "xpos_flips",
+  "xpos_reversals", "sample_entropy", "RT", "initiation_time",
+  "motor_pauses", "movement"
+)]
+
+labels <- c(
+  "MAD", expression(MD[above]), "AD", "AUC", "Flips",
+  "Reversals", "Sample entropy", "RT", "Initiation time",
+  "Motor pauses", "Movement"
+)
+
+# Compute Pearson and Spearman rank correlations
+cors <- measures %>% cor()
+cors_rank <- measures %>% cor(method = "spearman")
+
+# Compute Cohen's d with confidence interval per measure
+cond <- mt_data$data$Condition
+effects <- sapply(measures, function(x) cohen.d(x, cond == "Atypical")$cohen.d)
+
+# Setup colored correlations grid
+cors_combined <- cors
+cors_combined[upper.tri(cors_combined)] <- cors_rank[upper.tri(cors_combined)]
+cols <- rev(cividis(201))
+offset <- c(rep(0, 4), rep(.5, 3), rep(1, 4))
+pos <- expand.grid(x = (1:11) + offset, y = (1:11) + offset) %>%
+  mutate(
+    cor = as.vector(t(cors_combined)),
+    col = (cols)[round(c(cor) * 100) + 101]
+  ) %>%
+  filter(x != y) %>%
+  mutate(
+    y = 1 + max(y) - y
+  )
+```
+
+## Create plot
+```{r, fig.asp = 0.695}
+# Setup two pane plot layout
+layout(matrix(1:2, ncol = 2), width = c(.6, .4))
+par(mar = c(1, 5, 5, 1))
+
+# Create correlations plot
+w <- .5
+plot.new()
+plot.window(xlim = range(pos$x) + c(-w, w), ylim = range(pos$y) + c(-w, w))
+rect(
+  pos$x - w, pos$y - w, pos$x + w, pos$y + w,
+  col = pos$col, border = NA
+)
+text(pos$x, pos$y, labels = round(pos$cor, 2),
+     col = ifelse(pos$cor != 1, "white", cols[201]), cex = .5, font = 1)
+mtext(labels, side = 2, at = unique(pos$y) %>% sort(decreasing = T),
+      las = 1, adj = 1, cex = .75)
+mtext(rev(labels), side = 3, at = unique(pos$y) %>% sort(decreasing = T),
+      las = 2, adj = 0, cex = .75)
+mtext("A", side = 3, at = -3, cex = 1.15, line = 2.5)
+
+# Create Cohen's d plot
+ypos <- unique(pos$y) %>% sort(decreasing = TRUE)
+cols <- rev(cividis(100))
+plot.new()
+plot.window(xlim = c(-.2, .8), ylim = range(ypos) + c(-.5, .5))
+d_lines <- sapply(seq(-.2, .8, .1), function(x)
+  lines(c(x, x), range(ypos) + c(-.5, .5), lty = 2, lwd = .5)
+  )
+lines(c(0, 0), range(ypos) + c(-.5, .5), lwd = 2)
+for (i in 1:length(ypos)) lines(effects[c(1, 3), i], ypos[c(i, i)], lwd = 2)
+points(effects[2, ], ypos, pch = 15, cex = 1.5,
+       col = cols[(effects[2, ] + .3) * 100 %>% round()])
+labs <- sapply(seq(-.2, .8, .1) %>% round(1), function(x)
+  str_sub(x, nchar(x) - 1, nchar(x))
+  )
+mtext(labs, at = seq(-.2, .8, .1), side = 3, cex = .8)
+mtext(expression(paste("Cohen's ", italic(d))), side = 3, line = 2)
+mtext(labels,
+  side = 2, at = unique(pos$y) %>% sort(decreasing = T),
+  las = 1, adj = 1, cex = .75, line = .5
+)
+mtext("B", side = 3, at = -.8, cex = 1.15, line = 2.5)
+
+# Store plot for potential export
+current_plot <- recordPlot()
+```
+
+```{r, include = FALSE}
+export_device(
+  "figure_6_indices.pdf",
+  current_plot = current_plot,
+  device_function = pdf,
+  height = 4.02 * 1.1, width = 7 * 1.1
+  )
+```
+
+
+## Average correlations between different types of measures
+```{r}
+# Curvature and complexity indices
+cors[1:4, 5:7] %>% mean()
+
+# Curvature and temporal indices
+cors[1:4, c(8, 10, 11)] %>% mean()
+
+# Complexity and temporal indices
+cors[5:7, c(8, 10, 11)] %>% mean()
+```
+
+## Principal components analysis
+```{r}
+# One factor
+pca(measures[, -8], nfactors = 1)[["communality"]] %>% mean()
+
+# Five factors
+pca(measures[, -8], nfactors = 5)[["communality"]] %>% mean()
+```
+
+
+# Figure 7: Homogeneity
+
+## Preprocess data
+```{r}
+mt_data <- KH2017 %>%
+  mt_time_normalize() %>%
+  mt_length_normalize()
+```
+
+## Create plot
+```{r, dev = "png", fig.width = 6.3, fig.height = 8.04, fig.asp = 1.28, dpi = 200}
+# Setup two pane plot layout
+par(mfrow = c(2, 1))
+
+# Heatmap of raw trajectories
+mt_heatmap(
+  mt_data,
+  variable = mt_data$data$Condition == "Atypical",
+  smooth_radius = .5,
+  mean_image = .15,
+  mean_color = .15,
+  colors = c("white", cividis(7)[c(6, 1)]),
+  xres = 2000, bounds = c(-960, -100, 960, 1080),
+  verbose = FALSE
+)
+mtext("A", cex = 1.5, side = 3, at = 50, line = -1.5)
+
+# Heatmap of smoothed differences
+mt_diffmap(
+  mt_data,
+  condition = mt_data$data$Condition == "Typical",
+  colors = c(cividis(7)[6], "white", cividis(7)[1]),
+  xres = 1000, bounds = c(-960, -100, 960, 1080),
+  smooth_radius = 20, n_shades = 10,
+  verbose = FALSE
+)
+mtext("B", cex = 1.5, side = 3, at = 50, line = -1.5)
+
+# Store plot for potential export
+current_plot <- recordPlot()
+```
+
+```{r, include = FALSE}
+export_device(
+  "figure_7_homogeneity.png",
+  current_plot = current_plot,
+  device_function = png,
+  width = 6.3, height = 8.04, unit = "in", res = 600
+  )
+```
+
+
+# Figure 8: Clustering
+
+## Preprocess data
+```{r}
+# Preprocess trajectory data
+mt_data <- KH2017 %>%
+  mt_length_normalize() %>%
+  mt_cluster(use = "ln_trajectories") %>%
+  mt_map(use = "ln_trajectories")
+
+# Set colors
+col <- custom_colors[1]
+col2 <- "white"
+```
+
+## Create plot
+```{r, dev = "png", fig.width = 42, fig.height = 42, fig.asp = 1}
+# Setup three pane plot layout
+layout(matrix(1:18, ncol = 3, byrow = TRUE), height = c(.2, rep(1, 5)))
+
+# Prepare prototypes to display
+prototypes <- mt_length_normalize(mt_prototypes, 20)
+prototypes[, , 1] <-
+  prototypes[, , 1] * -mean(mt_data$ln_trajectories[, 20, "xpos"])
+prototypes[, , 2] <-
+  prototypes[, , 2] * (mean(mt_data$ln_trajectories[, 20, "ypos"]) / 1.5)
+
+# Compute percentages to display
+tab1 <- table(mt_data$clustering$cluster)
+tab1 <- round(tab1 / sum(tab1), 2) * 100
+tab2 <- table(mt_data$prototyping$prototype)
+tab2 <- round(tab2 / sum(tab2), 2) * 100
+
+# Specify labels
+txts <- c("Clustering", "Prototypes", "Prototype clustering")
+txts2 <- c("A", "B", "C")
+txts3 <- dimnames(mt_prototypes)[[1]]
+
+# Plot column labels
+# Note: setup of a figure of this size only works when opening graphics device
+#        of sufficient size (see commented out png call above)
+for (i in 1:3) {
+  plot.new()
+  par(mar = c(0, 0, 0, 0))
+  plot.window(xlim = c(0, 1), c(0, .2))
+  text(.02, .1, txts2[i], font = 1, cex = 12)
+}
+
+# Plot trajectories per row
+for (i in 1:5) {
+
+  # First column in row: Trajectories in cluster ----
+  
+  # Extract clustered trajectories
+  current_traj <- mt_subset(mt_data, cluster == i, check = "clustering")
+  
+  # Plot individual trajectories
+  mt_heatmap(
+    current_traj,
+    smooth_radius = 1,
+    colors = c("white", col),
+    bounds = c(-1000, -100, 1000, 1100),
+    xres = 1000,
+    verbose = FALSE
+  )
+
+  # Add aggregate trajectory
+  x <- colMeans(current_traj$ln_trajectories[, , "xpos"]) / 2 + 500
+  y <- (colMeans(current_traj$ln_trajectories[, , "ypos"]) + 100) / 2.05
+  lines(x, y, lwd = 55, col = col2)
+  points(x[c(1, length(x))], y[c(1, length(y))],
+         bg = col, col = col2, cex = 17, pch = 21, lwd = 10)
+  lines(x, y, lwd = 35, col = col)
+  
+  # Add percentage labels
+  text(200, 120, paste0(tab1[i], "%"), cex = 10)
+  
+  
+  # Second column in row: Prototype ----
+  plot.new()
+  plot.window(xlim = c(-1000, 1000), ylim = c(-100, 1100))
+  points(prototypes[i, c(1, 20), 1], prototypes[i, c(1, 20), 2],
+         bg = col, col = col2, cex = 17, pch = 21, lwd = 7)
+  lines(prototypes[i, , 1], prototypes[i, , 2], lwd = 35, col = col)
+  x <- ifelse(i <= 3, ifelse(i == 1, 50, ifelse(i == 2, 300, -150)), 0)
+  text(x, 500, labels = txts3[i], col = "black", cex = 10)
+
+  
+  # Third column in row: Trajectories mapped on prototype ----
+  
+  # Extract trajectories mapped on prototype
+  current_traj <- mt_subset(mt_data, prototype == i, check = "prototyping")
+  
+  # Plot individual trajectories
+  mt_heatmap(
+    current_traj,
+    smooth_radius = 1,
+    colors = c("white", col),
+    bounds = c(-1000, -100, 1000, 1100),
+    xres = 1000,
+    verbose = FALSE
+  )
+
+  # Add aggregate trajectory
+  x <- colMeans(current_traj$ln_trajectories[, , "xpos"]) / 2 + 500
+  y <- (colMeans(current_traj$ln_trajectories[, , "ypos"]) + 100) / 2.05
+  lines(x, y, lwd = 55, col = col2)
+  points(x[c(1, length(x))], y[c(1, length(y))],
+         bg = col, col = col2, cex = 17, pch = 21, lwd = 10)
+  lines(x, y, lwd = 35, col = col)
+  
+  # Add percentage labels
+  text(200, 120, paste0(tab2[i], "%"), cex = 10)
+}
+
+# Store plot for potential export
+current_plot <- recordPlot()
+```
+
+```{r, include = FALSE}
+export_device(
+  "figure_8_clustering.png",
+  current_plot = current_plot,
+  device_function = png,
+  width = 3000, height = 602 * 5.133, unit = "px"
+  )
+```
+
+## Prototype frequency comparison
+```{r}
+# Prototype frequencies per condition
+prototype_frequencies <- 
+  table(
+    mt_data$data$Condition,
+    mt_data$prototyping$prototype_label
+    )
+prototype_frequencies
+
+# Percentages
+prototype_frequencies/
+  c(table(mt_data$data$Condition))
+
+# Chi-squared test of prototype frequency
+prototype_chisq <-
+  chisq.test(prototype_frequencies)
+prototype_chisq
+
+# Extract residuals
+prototype_chisq$residuals
+```
+
+
+# Figure 9: Position & angle
+
+## Preprocess data
+```{r}
+# Preprocess trajectory data
+mt_data <- KH2017 %>%
+  mt_time_normalize() %>%
+  mt_angles(use = "tn_trajectories")
+
+# Transform angle and position into long format
+pos_angle_long <- mt_export_long(
+  mt_data,
+  use = "tn_trajectories",
+  use_variables = c("steps", "xpos", "angle_v"),
+  use2_variables = c("Condition", "subject_nr")
+)
+
+# Setup function that runs a mixed model per time step
+mixed_model_per_step <- function(step, dv){
+  current_data <-
+    pos_angle_long %>%
+    filter(steps == step) %>%
+    filter(is.na(.data[[dv]])==FALSE)
+  
+  # Do not run model if there is no non-NA data
+  if(nrow(current_data) == 0){
+    current_model <- "not_run"
+    current_p <- 1
+    current_n <- 0
+    
+  # If there is data, count number of observations
+  } else{
+    current_desc <-
+      current_data %>%
+      group_by(Condition) %>%
+      summarize(
+        n = n(),
+        sd = sd(.data[[dv]]),
+        n_subjects = length(unique(subject_nr))
+      )
+    current_n <- sum(current_desc$n)
+    
+    # Only run model if there is data for at least two participants and 
+    # if SD of variable is > 0 in each condition
+    if((min(current_desc$n_subjects) > 2) & (min(current_desc$sd > 0))){
+      current_model <- mixed(
+        as.formula(paste(dv, "(1|subject_nr)+Condition", sep = "~")),
+        data = current_data,
+        progress = FALSE
+      )
+      current_p <- current_model$anova_table$`Pr(>F)`
+      current_model <- "run"
+    
+    # Otherwise set p to 1
+    } else{
+      current_model <- "not_run"
+      current_p <- 1
+    }
+    
+  }
+  
+  return(
+    tibble(
+      steps = step,
+      p = current_p,
+      sig = p < .05,
+      n = current_n,
+      model = current_model
+    )
+  )
+  
+}
+
+# Run mixed models for xpos and angle_v
+mixed_models_xpos <-
+  unique(pos_angle_long$steps) %>%
+  map_dfr(mixed_model_per_step, dv = "xpos")
+
+mixed_models_angle <-
+  unique(pos_angle_long$steps) %>%
+  map_dfr(mixed_model_per_step, dv = "angle_v")
+
+# Retrieve significant differences
+mixed_models_xpos$steps[mixed_models_xpos$sig]
+mixed_models_angle$steps[mixed_models_angle$sig]
+```
+
+## Create plot
+```{r, fig.asp = 0.5}
+# Create plot for x positions
+p1 <- mt_plot(
+  mt_data,
+  use = "tn_trajectories",
+  x = "steps", y = "xpos",
+  color = "Condition", alpha = .1
+) +
+  mt_plot_aggregate(
+    mt_data,
+    use = "tn_trajectories",
+    x = "steps", y = "xpos",
+    color = "Condition",
+    size = 2,
+    return_type = "geom"
+  ) +
+  scale_color_manual(values = custom_colors_3[c(1, 3)]) +
+  labs(x = "Time step", y = "Position on horizontal axis (x)") +
+  geom_text(
+    label = "*", color = "black", size = 2,
+    mapping = aes(x = steps, y = 1000),
+    data = mixed_models_xpos %>% filter(sig)
+  )+ 
+  theme(legend.position = "none")
+
+
+# Create plot for angles
+p2 <- mt_plot(
+  mt_data,
+  use = "tn_trajectories",
+  x = "steps", y = "angle_v",
+  color = "Condition", alpha = .05
+) +
+  mt_plot_aggregate(
+    mt_data,
+    use = "tn_trajectories",
+    x = "steps", y = "angle_v",
+    color = "Condition",
+    size = 2,
+    return_type = "geom",
+    .funs = ~ mean(.x, na.rm = TRUE)
+  ) +
+  scale_color_manual(values = custom_colors_3[c(1, 3)]) +
+  scale_y_continuous(
+    breaks = seq(-pi, pi, pi / 2),
+    labels = scales::math_format(.x * pi, format = function(x) x / pi)
+    ) +
+  labs(x = "Time step", y = "Angle relative to vertical axis (y)") +
+  geom_text(
+    label = "*", color = "black", size = 2,
+    mapping = aes(x = steps, y = pi),
+    data = mixed_models_angle %>% filter(sig)
+  )+ 
+  theme(legend.position = "top")
+
+p1 + p2 + plot_annotation(tag_levels = "A")
+```
+
+```{r, include = FALSE}
+export_ggsave("figure_9_temporal.pdf", width = 7, height = 3.5)
+export_ggsave("figure_9_temporal.png", width = 7, height = 3.5)
+```
+
+
+# Figure 10: Temporal averaging
+
+## Preprocess data
+```{r}
+# Preprocess trajectory data
+mt_data <- KH2017 %>%
+  mt_length_normalize() %>%
+  mt_map(use = "ln_trajectories") %>%
+  mt_measures() %>%
+  # Resample trajectories to allow averaging non-normalized trajectories
+  mt_resample(step_size = 10, exact_last_timestamp = FALSE)
+
+# Add data from other elements to data element
+mt_data$data$RT <- mt_data$measures$RT
+mt_data$data$prototype_label <- mt_data$prototyping$prototype_label
+
+```
+
+## Descriptives
+```{r}
+mt_aggregate(
+  mt_data,
+  use = "measures", use_variables = "RT",
+  use2_variables = "Condition",
+  .funs = "median"
+  )
+
+rt_freq <- table(cut(mt_data$data$RT, breaks = c(0, 1500.5, 2500.5, 5000.5, Inf)))
+rt_freq
+rt_freq / nrow(mt_data$data)
+```
+
+## Create plot
+```{r, fig.asp = 0.86}
+p1 <- mt_plot(
+  mt_data,
+  use = "rs_trajectories", x = "timestamps", y = "xpos",
+  color = "Condition", alpha = .1,
+  subset = RT <= 1500
+  ) +
+  scale_color_manual(values = cividis(3)[c(1, 3)]) +
+  labs(x = "Time in ms", y = "Position (x)", subtitle = "RT < 1500") +
+  theme_minimal() + 
+  theme(legend.position = "none",
+        plot.subtitle = element_text(size = 8, hjust = 0.5)) +
+  coord_cartesian(ylim = c(-800, 800)) +
+  mt_plot_aggregate(
+    mt_data,
+    use = "rs_trajectories", x = "timestamps", y = "xpos",
+    color = "Condition",
+    size = 2,
+    return_type = "geom",
+    subset = RT <= 1500
+  ) 
+
+p2 <- mt_plot(
+  mt_data,
+  use = "rs_trajectories", x = "timestamps", y = "xpos",
+  color = "Condition", alpha = .1,
+  subset = RT > 1500 & RT <= 2500
+) +
+  scale_color_manual(values = cividis(3)[c(1, 3)]) +
+  labs(x = "Time in ms", y = "Position (x)", subtitle = "1500 < RT <= 2500") +
+  theme_minimal() + 
+  theme(legend.position = "none",
+        plot.subtitle = element_text(size = 8, hjust = 0.5)) +
+  coord_cartesian(ylim = c(-800, 800)) +
+  mt_plot_aggregate(
+    mt_data,
+    use = "rs_trajectories", x = "timestamps", y = "xpos",
+    color = "Condition",
+    size = 2,
+    return_type = "geom",
+    subset = RT > 1500 & RT <= 2500
+  ) +
+  theme(axis.text.y = element_blank(), axis.title.y = element_blank())
+
+p3 <- mt_plot(
+  mt_data,
+  use = "rs_trajectories", x = "timestamps", y = "xpos",
+  color = "Condition", alpha = .1,
+  subset = RT > 2500 & RT <= 5000
+) +
+  scale_color_manual(values = cividis(3)[c(1, 3)]) +
+  labs(x = "Time in ms", y = "Position (x)", subtitle = "2500 < RT <= 5000") +
+  theme_minimal() + 
+  theme(legend.position = "none",
+        plot.subtitle = element_text(size = 8, hjust = 0.5)) +
+  coord_cartesian(ylim = c(-800, 800)) +
+  mt_plot_aggregate(
+    mt_data,
+    use = "rs_trajectories", x = "timestamps", y = "xpos",
+    color = "Condition",
+    size = 2,
+    return_type = "geom",
+    subset = RT > 2500 & RT <= 5000
+  )+
+  theme(axis.text.y = element_blank(), axis.title.y = element_blank())
+
+
+h <- ggplot(mt_data$data, aes(x = RT, fill = Condition, color = Condition)) +
+  geom_density(alpha = .55) +
+  guides(fill = guide_legend(override.aes = list(alpha=1))) +
+  theme_minimal() +
+  scale_fill_manual(values = cividis(3)[c(1, 3)]) +
+  scale_color_manual(values = cividis(3)[c(1, 3)]) +
+  xlim(0, 5000) +
+  theme(legend.position = "top") +
+  labs(x = "Response time in ms", y = "Density") +
+  theme(axis.text.y = element_blank()) +
+  theme(legend.text = element_text(size = 6),
+        legend.title = element_text(size = 8),
+        legend.key.size = unit(.8, "lines")) +
+  geom_vline(xintercept = c(1500, 2500), linetype = "dashed", size = .5)
+
+h2 <- ggplot(
+  mt_data$data, aes(x = RT, fill = prototype_label, color = prototype_label)
+  ) +
+  geom_density(alpha = .55) +
+  guides(fill = guide_legend(override.aes = list(alpha=1))) +
+  theme_minimal() +
+  scale_fill_manual(values = cividis(5), name = "Trajectory type") +
+  scale_color_manual(values = cividis(5), name = "Trajectory type") +
+  xlim(c(0, 5000)) +
+  theme(legend.position = "top") +
+  labs(x = "Response time in ms", y = "Density") +
+  theme(axis.text.y = element_blank()) +
+  theme(legend.text = element_text(size = 6),
+        legend.title = element_text(size = 8),
+        legend.key.size = unit(.8, "lines")) +
+  geom_vline(xintercept = c(1500, 2500), linetype = "dashed", size = .5)
+
+h / (p1 + p2 + p3) / h2 + plot_annotation(tag_levels = "A")
+```
+
+```{r, include = FALSE}
+export_ggsave("figure_10_temporal_agg.pdf", width = 7, height = 6)
+export_ggsave("figure_10_temporal_agg.png", width = 7, height = 6)
+```
+
+
+# Figure 11: Velocity & acceleration
+
+## Preprocess data
+```{r}
+## Create prototype mapping using standard trajectory preprocessing first
+mt_data <- KH2017 %>%
+  mt_length_normalize() %>%
+  mt_map(use = "ln_trajectories")
+mt_data$data$prototype_label <- mt_data$prototyping$prototype_label
+
+## Exclude potential phase without movement at beginning and end of trial
+mt_data <- mt_data %>%
+  mt_exclude_initiation(reset_timestamps = TRUE) %>%
+  mt_exclude_finish() 
+
+## Calculate derivatives and then time-normalize trajectories with
+## dimensions set to all meaning that derivatives are also time-normalized
+mt_data <- mt_data %>%
+  mt_derivatives() %>%
+  mt_time_normalize(dimensions = "all")
+```
+
+## Smoothing function
+A similar function will be included in mousetrap package.
+
+```{r}
+smooth <- function(x, pos, sd = 2) {
+  sm <- numeric(length(x))
+  for (i in 1:length(x)) {
+    w <- dnorm(pos, pos[i], sd = sd)
+    sm[i] <- sum(x * w, na.rm = T) / sum(w, na.rm = T)
+  }
+  sm
+}
+```
+
+## Create plot
+```{r, fig.asp = 0.4375}
+agg_traj <- mt_aggregate(
+  mt_data,
+  use = "tn_trajectories",
+  use2_variables = "prototype_label", trajectories_long = TRUE
+) %>%
+  group_by(prototype_label) %>%
+  mutate(
+    sm_vel = smooth(vel, steps, sd = 3),
+    sm_acc = smooth(acc, steps, sd = 6)
+  ) %>%
+  ungroup()
+
+vel_plot <- ggplot(
+  agg_traj,  aes(steps, sm_vel, col = prototype_label, fill = prototype_label)
+  ) +
+  facet_wrap(~prototype_label, ncol = 5) +
+  geom_path(size = 2, show.legend = FALSE) +
+  scale_color_manual(values = cividis(5)) +
+  scale_fill_manual(values = cividis(5)) +
+  labs(
+    x = "Time step",
+    y = "Average velocity"
+  )
+
+acc_plot <- ggplot(
+  agg_traj,  aes(steps, sm_acc, col = prototype_label, fill = prototype_label)
+  ) +
+  facet_wrap(~prototype_label, ncol = 5) +
+  geom_path(size = 2, show.legend = FALSE) +
+  scale_color_manual(values = cividis(5)) +
+  scale_fill_manual(values = cividis(5)) +
+  labs(
+    x = "Time step",
+    y = "Average acceleration"
+  )
+
+vel_plot / acc_plot
+```
+
+```{r, include = FALSE}
+export_ggsave("figure_11_velocity.pdf", width = 8, height = 3.5)
+```
+
+
+
+# Figure 12: Impact of trial design
+
+## Retrieve and prepare data from OSF
+```{r}
+# Setup folder in working directory where design factors data should be stored
+dir.create("design_factors_data")
+
+# Download design factors data using OSF file links and read them into R
+# (if files already exist, download will be skipped and data will still be loaded)
+design_factors_raw <-
+  c(
+    "1" = "https://osf.io/7vrkz/",
+    "2" = "https://osf.io/5hcju/",
+    "3" = "https://osf.io/7bfhz/"
+  ) %>%
+  map_dfr(
+    ~ osf_retrieve_file(.) %>% 
+      osf_download(path = "design_factors_data", conflicts = "skip"),
+    .id = "experiment"
+  ) %>%
+  pull(local_path, name = "experiment") %>%
+  map_dfr(read_csv, .id = "experiment")
+
+# Filter and label design factors data
+design_factors_raw <-
+  design_factors_raw %>%
+  mutate(
+    Typicality = factor(Condition, levels = c("Typical", "Atypical")),
+    Manipulation = str_to_title(group),
+    Manipulation = factor(
+      Manipulation, 
+      levels = c(
+        "Click", "Touch", "Default", "Slow", "Static","Dynamic",
+        "Initmax", "Rtmax"
+        ),
+      labels = c(
+        "Click", "Touch", "Default", "Slow", "Static","Dynamic",
+        "Timed: Initiation", "Timed: Response"
+        )
+    )
+    
+  ) %>%
+  filter(correct == 1)
+```
+
+## Preprocess data
+```{r}
+# Import mouse-tracking data
+mt_data <- mt_import_mousetrap(
+  design_factors_raw,
+  xpos_label = c("xpos_initial_phase", "xpos_get_response"),
+  ypos_label = c("ypos_initial_phase", "ypos_get_response"),
+  timestamps_label = c("timestamps_initial_phase", "timestamps_get_response")
+)
+
+# Preprocess mouse-tracking data
+mt_data <- mt_data %>%
+  mt_remap_symmetric() %>%
+  mt_align_start() %>%
+  mt_time_normalize()
+```
+
+## Create plot
+```{r, fig.asp = 0.443}
+# Create plots per experiment
+p1 <-
+  mt_data %>%
+  mt_subset(experiment == 3) %>%
+  mt_plot(
+    use = "tn_trajectories",
+    wrap_var = "Manipulation", wrap_ncol = 4,
+    alpha = .025
+  ) +
+  coord_cartesian(xlim = c(-990, 990), ylim = c(-50, 970), expand = FALSE) +
+  labs(x = NULL, y = NULL) + 
+  theme(axis.text.x = element_blank())
+
+p2 <-
+  mt_data %>%
+  mt_subset(experiment == 1) %>%
+  mt_plot(
+    use = "tn_trajectories",
+    wrap_var = "Manipulation", wrap_ncol = 2,
+    alpha = .025
+  ) +
+  coord_cartesian(xlim = c(-990, 990), ylim = c(-50, 970), expand = FALSE) +
+  labs(x = NULL, y = NULL)
+
+p3 <-
+  mt_data %>%
+  mt_subset(experiment == 2) %>%
+  mt_plot(
+    use = "tn_trajectories",
+    wrap_var = "Manipulation", wrap_ncol = 2,
+    alpha = .025
+  ) +
+  coord_cartesian(xlim = c(-990, 990), ylim = c(-50, 970), expand = FALSE) +
+  labs(x = NULL, y = NULL) + 
+  theme(axis.text.y = element_blank())
+
+((p1) / (p2 | p3)) +
+  plot_annotation(tag_levels = "A") &
+  theme(plot.tag = element_text(size = 10))
+```
+
+```{r, include = FALSE}
+export_ggsave(
+  "figure_12_designfactors.png",
+  width = 15.6, height = 6.9, dpi = 600, unit = "cm"
+  )
+```
+
