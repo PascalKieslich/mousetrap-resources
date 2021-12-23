@@ -1,4 +1,4 @@
-This repository contains resources for the mousetrap suite, a collection of open-source software packages for creating and analyzing movement tracking experiments. The resources are presented separately for the different publications they are supporting (both published and ongoing).
+This repository contains resources for the mousetrap suite, a collection of open-source software packages for creating and analyzing movement tracking experiments. The resources are presented separately for the different projects they are supporting (both published and work in progress).
 
 
 ### Wulff, Kieslich, Henninger, Haslbeck & Schulte-Mecklenbeck (2021)
