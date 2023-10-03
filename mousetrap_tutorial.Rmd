@@ -1,5 +1,5 @@
 ---
-title: "Movement-tracking of cognitive processes: A tutorial using mousetrap"
+title: "Movement-tracking of psychological processes: A tutorial using mousetrap"
 author: "Dirk Wulff, Pascal Kieslich, Felix Henninger, Jonas Haslbeck & Michael Schulte-Mecklenbeck"
 output:
   html_document:
@@ -52,7 +52,7 @@ custom_colors_3 <- custom_colors[c(1, 4, 5)]
 # Create custom figure export functions and set defaults
 
 # Specify if figures created in this tutorial should also be saved as files
-save_figures <- FALSE
+save_figures <- TRUE
 
 # Specify folder in current working directory where figures should be saved
 figure_path <- "3_figures"
@@ -791,7 +791,7 @@ p1 <- mt_plot(
   subset = RT <= 1500
   ) +
   scale_color_manual(values = cividis(3)[c(1, 3)]) +
-  labs(x = "Time in ms", y = "Position (x)", subtitle = "RT < 1500") +
+  labs(x = "Time in ms", y = "Position (x)", subtitle = "RT <= 1500") +
   theme_minimal() + 
   theme(legend.position = "none",
         plot.subtitle = element_text(size = 8, hjust = 0.5)) +
