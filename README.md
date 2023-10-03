@@ -5,7 +5,7 @@ This repository contains resources for the mousetrap suite, a collection of open
 
 ## Wulff, Kieslich, Henninger, Haslbeck & Schulte-Mecklenbeck (2023)
 
-This [preprint](https://psyarxiv.com/v685r) presents a tutorial to movement tracking of psyxhological processes with the [mousetrap R package](http://pascalkieslich.github.io/mousetrap/). Using [data](http://pascalkieslich.github.io/mousetrap/reference/KH2017_raw.html) collected in Kieslich & Henninger (2017), the tutorial covers the complete analysis process, starting with the raw data import, various algorithms for processing, analyzing and visualizing movement trajectories, as well as novel methodology for classifying movement trajectory types. All analyses performed in this tutorial can be replicated using the accompanying analysis script available as [R Markdown](mousetrap_tutorial.Rmd) (code only) and [HTML](mousetrap_tutorial.html) (code including output).
+This [preprint](https://psyarxiv.com/v685r) presents a tutorial to movement tracking of psychological processes with the [mousetrap R package](http://pascalkieslich.github.io/mousetrap/). Using [data](http://pascalkieslich.github.io/mousetrap/reference/KH2017_raw.html) collected in Kieslich & Henninger (2017), the tutorial covers the complete analysis process, starting with the raw data import, various algorithms for processing, analyzing and visualizing movement trajectories, as well as novel methodology for classifying movement trajectory types. All analyses performed in this tutorial can be replicated using the accompanying analysis script available as [R Markdown](mousetrap_tutorial.Rmd) (code only) and [HTML](mousetrap_tutorial.html) (code including output).
 
 
 ## Wulff, Haslbeck, Kieslich, Henninger & Schulte-Mecklenbeck (2019)
